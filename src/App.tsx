@@ -4,6 +4,9 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Notes from './pages/Notes';
 import Profile from './pages/Profile';
+import Calendar from './pages/Calendar';
+import Tasks from './pages/Tasks';
+import Goals from './pages/Goals';
 import './App.css';
 
 function App() {
@@ -15,6 +18,9 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notes" element={<Notes />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/todo" element={<Tasks />} />
+        <Route path="/goals" element={<Goals />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
     </Router>

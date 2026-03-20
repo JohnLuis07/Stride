@@ -39,7 +39,9 @@ const Dashboard: React.FC = () => {
     navigate('/login');
   };
 
-  const enabledFeatures = user?.features && user.features.length > 0 ? user.features : ['Notes'];
+  const enabledFeatures = user?.features && user.features.length > 0
+    ? user.features
+    : ['Notes', 'Calendar', 'Todo', 'Goals'];
 
   const featureCards = [
     { id: 'Notes', name: 'Notes', icon: '📝', path: '/notes', description: 'Write and organize your thoughts.' },

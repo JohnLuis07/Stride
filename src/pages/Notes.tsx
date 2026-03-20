@@ -21,7 +21,7 @@ const Notes: React.FC = () => {
   const [lastSavedNote, setLastSavedNote] = useState<Partial<Note>>({ title: '', content: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showWarning, setShowWarning] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   
@@ -36,6 +36,11 @@ const Notes: React.FC = () => {
       .replace(/&nbsp;/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+
+  const showToast = (type: 'success' | 'error', text: string) => {
+    setToast({ type, text });
+    setTimeout(() => setToast(null), 2500);
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -129,7 +134,7 @@ const Notes: React.FC = () => {
   const handleSaveNote = async () => {
     if (!user) return;
     setSaving(true);
-    setSaveStatus(null);
+    setToast(null);
 
     const noteData = {
       title: currentNote.title || 'Untitled Note',
@@ -159,13 +164,12 @@ const Notes: React.FC = () => {
     }
 
     if (error) {
-      alert('Error saving: ' + error.message);
+      showToast('error', `Error saving note: ${error.message}`);
     } else if (savedNote) {
       setCurrentNote(savedNote);
       setLastSavedNote(savedNote);
-      setSaveStatus('Saved!');
+      showToast('success', 'Note saved');
       fetchNotes(user.id);
-      setTimeout(() => setSaveStatus(null), 2000);
     }
     setSaving(false);
   };
@@ -189,6 +193,12 @@ const Notes: React.FC = () => {
 
   return (
     <div className="dashboard-container">
+      {toast && (
+        <div className="toast-stack">
+          <div className={`toast-notification toast-${toast.type}`}>{toast.text}</div>
+        </div>
+      )}
+
       {/* Warning Modal */}
       {showWarning && (
         <div className="modal-overlay">
@@ -266,7 +276,7 @@ const Notes: React.FC = () => {
         <div className="editor-header notes-editor-header">
           <button
             onClick={() => handleActionWithWarning(() => navigate('/dashboard'))}
-            className="notes-dashboard-btn"
+            className="dashboard-back-btn"
           >
             Back to Dashboard
           </button>
@@ -279,7 +289,6 @@ const Notes: React.FC = () => {
             onChange={(e) => setCurrentNote(prev => ({ ...prev, title: e.target.value }))}
           />
           <div className="notes-editor-actions">
-            {saveStatus && <span className="notes-save-status">{saveStatus}</span>}
             <button
               onClick={handleSaveNote}
               className="save-note-btn"

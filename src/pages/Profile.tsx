@@ -7,10 +7,10 @@ const Profile: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(['Notes']);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(['Notes', 'Calendar', 'Todo', 'Goals']);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
+  const [toast, setToast] = useState<{ type: 'error' | 'success', text: string } | null>(null);
   
   const [lastSavedProfile, setLastSavedProfile] = useState<any>(null);
   const [showWarning, setShowWarning] = useState(false);
@@ -24,6 +24,11 @@ const Profile: React.FC = () => {
     { id: 'Todo', name: 'Task Manager', icon: '✅', description: 'Track your daily to-do list' },
     { id: 'Goals', name: 'Goal Tracking', icon: '🎯', description: 'Set and monitor long-term goals' }
   ];
+
+  const showToast = (type: 'error' | 'success', text: string) => {
+    setToast({ type, text });
+    setTimeout(() => setToast(null), 2500);
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -46,7 +51,7 @@ const Profile: React.FC = () => {
         setUser(data);
         setFullName(data.full_name || '');
         setEmail(data.email || '');
-        const features = data.features || ['Notes'];
+        const features = data.features || ['Notes', 'Calendar', 'Todo', 'Goals'];
         setSelectedFeatures(features);
         setLastSavedProfile({ fullName: data.full_name || '', email: data.email || '', features });
       }
@@ -94,7 +99,7 @@ const Profile: React.FC = () => {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
-    setMessage(null);
+    setToast(null);
 
     const { error } = await supabase
       .from('users')
@@ -106,11 +111,12 @@ const Profile: React.FC = () => {
       .eq('id', user.id);
 
     if (error) {
-      setMessage({ type: 'error', text: 'Error updating profile: ' + error.message });
+      showToast('error', 'Error updating profile: ' + error.message);
     } else {
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      showToast('success', 'Profile updated successfully');
       localStorage.setItem('userEmail', email);
-      setTimeout(() => setMessage(null), 3000);
+      setUser((prev: any) => ({ ...prev, full_name: fullName, email, features: selectedFeatures }));
+      setLastSavedProfile({ fullName, email, features: selectedFeatures });
     }
     setSaving(false);
   };
@@ -124,6 +130,12 @@ const Profile: React.FC = () => {
 
   return (
     <div className="dashboard-container" style={{ backgroundColor: '#f9fafb' }}>
+      {toast && (
+        <div className="toast-stack">
+          <div className={`toast-notification toast-${toast.type}`}>{toast.text}</div>
+        </div>
+      )}
+
       {/* Warning Modal */}
       {showWarning && (
         <div className="modal-overlay">
@@ -139,16 +151,15 @@ const Profile: React.FC = () => {
         </div>
       )}
 
-      <div className="dashboard-main" style={{ padding: '0 2rem' }}>
+      <div className="dashboard-main profile-page-main">
         <div className="profile-container-inner">
           <div className="editor-header" style={{ justifyContent: 'space-between', padding: '3rem 0', borderBottom: 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <button 
-                onClick={() => handleActionWithWarning(() => navigate('/dashboard'))} 
-                className="save-note-btn" 
-                style={{ backgroundColor: 'white', color: '#374151', border: '1px solid #e5e7eb', padding: '0.6rem 1.2rem', boxShadow: 'none' }}
+              <button
+                onClick={() => handleActionWithWarning(() => navigate('/dashboard'))}
+                className="dashboard-back-btn"
               >
-                ← Dashboard
+                Back to Dashboard
               </button>
               <h1 className="profile-title">Profile Settings</h1>
             </div>
@@ -159,12 +170,6 @@ const Profile: React.FC = () => {
               </button>
             </div>
           </div>
-
-          {message && (
-            <div className={`alert ${message.type === 'error' ? 'alert-error' : 'alert-success'}`} style={{ marginBottom: '2rem' }}>
-              {message.text}
-            </div>
-          )}
 
           <form onSubmit={handleSaveProfile} className="profile-form">
             <div className="profile-card">
