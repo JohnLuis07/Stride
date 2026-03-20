@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Notes from './pages/Notes';
+import Profile from './pages/Profile';
 import './App.css';
 
 function App() {
@@ -12,6 +14,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/notes" element={<Notes />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </Router>
   );
