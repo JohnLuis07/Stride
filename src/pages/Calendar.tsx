@@ -134,12 +134,6 @@ const Calendar: React.FC = () => {
     return days;
   }, [viewMonth]);
 
-  const upcomingEvents = useMemo(() => {
-    return [...events]
-      .filter((event) => event.event_date >= formatDateKey(today))
-      .slice(0, 5);
-  }, [events, today]);
-
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !form.title.trim()) return;

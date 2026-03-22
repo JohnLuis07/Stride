@@ -15,7 +15,6 @@ interface Note {
 
 const Notes: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentNote, setCurrentNote] = useState<Partial<Note>>({ title: '', content: '' });
