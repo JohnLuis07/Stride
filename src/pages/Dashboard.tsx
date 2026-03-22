@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import '../App.css';
 
@@ -7,6 +7,7 @@ const Dashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -50,77 +51,82 @@ const Dashboard: React.FC = () => {
     { id: 'Goals', name: 'Goals', icon: '🎯', path: '/goals', description: 'Set and achieve your milestones.' },
   ].filter(f => enabledFeatures.includes(f.id));
 
-  if (loading) return <div className="auth-container">Loading Workspace...</div>;
+  if (loading) return <div className="dashboard-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Loading Workspace...</div>;
 
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
-      <div className="dashboard-sidebar">
+      <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <h3>STRIDE</h3>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+          <h3>Stride.</h3>
         </div>
         
-        <div className="notes-list">
-          <div className="note-item active">
-            <div className="note-item-title">Overview</div>
-          </div>
+        <nav className="sidebar-nav">
+          <Link to="/dashboard" className={`sidebar-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
+             🏠 Overview
+          </Link>
           {featureCards.map(feature => (
-            <Link key={feature.id} to={feature.path} className="sidebar-nav-link">
-              <div className="note-item">
-                <div className="note-item-title">{feature.name}</div>
+            <Link key={feature.id} to={feature.path} className={`sidebar-link ${location.pathname === feature.path ? 'active' : ''}`}>
+              <span>{feature.icon}</span> {feature.name}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div style={{ padding: '0 0.5rem 0.5rem 0.5rem' }}>
+            <div style={{ fontWeight: '700', color: 'var(--text-h)', fontSize: '0.95rem' }}>{user?.full_name}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text)' }}>{user?.email}</div>
+          </div>
+          <Link to="/profile" className="sidebar-link" style={{ marginBottom: '0.5rem' }}>⚙️ Settings</Link>
+          <button onClick={handleSignOut} className="btn-sign-out">
+            Logout
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="dashboard-main">
+        <header className="page-header">
+          <h1 className="page-title">Welcome back, {user?.full_name?.split(' ')[0]}!</h1>
+          <p className="page-subtitle">Here's what's happening in your workspace today.</p>
+        </header>
+
+        <section className="feature-grid">
+          {featureCards.map(feature => (
+            <Link 
+              key={feature.id} 
+              to={feature.path}
+              className="feature-item-card"
+            >
+              <div className="feature-icon-wrapper">{feature.icon}</div>
+              <div className="feature-content">
+                <h3>{feature.name}</h3>
+                <p>{feature.description}</p>
               </div>
             </Link>
           ))}
-        </div>
-
-        <div className="sidebar-footer">
-          <div style={{ fontWeight: '600', color: '#374151', fontSize: '0.9rem' }}>{user?.full_name}</div>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '1rem' }}>{user?.email}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <Link to="/profile" className="save-note-btn" style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #e5e7eb', padding: '0.5rem', fontSize: '0.85rem', textDecoration: 'none', textAlign: 'center' }}>⚙️ Settings</Link>
-            <button onClick={handleSignOut} className="btn-sign-out" style={{ width: '100%', justifyContent: 'space-between' }}>
-              <span className="btn-sign-out-label">Logout</span>
-              <span className="btn-sign-out-arrow" aria-hidden="true">{'>'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="dashboard-main">
-        <div className="editor-header">
-          <h1 className="profile-title">Welcome back, {user?.full_name?.split(' ')[0]}!</h1>
-        </div>
-        <br></br>
-        <div className="profile-content">
-          <p className="section-desc">Quickly access your enabled features or manage them in your profile.</p>
           
-          <div className="features-grid">
-            {featureCards.map(feature => (
-              <div 
-                key={feature.id} 
-                className="feature-card"
-                onClick={() => navigate(feature.path)}
-                style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '2rem' }}
-              >
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{feature.icon}</div>
-                <div className="feature-name" style={{ fontSize: '1.25rem' }}>{feature.name}</div>
-                <div className="feature-desc" style={{ fontSize: '0.95rem' }}>{feature.description}</div>
-              </div>
-            ))}
-            
-            <div 
-              className="feature-card"
-              onClick={() => navigate('/profile')}
-              style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '2rem', borderStyle: 'dashed' }}
-            >
-              <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>➕</div>
-              <div className="feature-name" style={{ fontSize: '1.25rem' }}>Add More</div>
-              <div className="feature-desc" style={{ fontSize: '0.95rem' }}>Enable more features in your settings.</div>
+          <Link 
+            to="/profile"
+            className="feature-item-card"
+            style={{ borderStyle: 'dashed', backgroundColor: 'transparent' }}
+          >
+            <div className="feature-icon-wrapper">➕</div>
+            <div className="feature-content">
+              <h3>Customize</h3>
+              <p>Add or remove features to fit your workflow.</p>
             </div>
-          </div>
-        </div>
-      </div>
+          </Link>
+        </section>
+      </main>
     </div>
   );
 };

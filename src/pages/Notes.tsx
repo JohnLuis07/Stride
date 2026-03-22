@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -15,6 +15,7 @@ interface Note {
 
 const Notes: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentNote, setCurrentNote] = useState<Partial<Note>>({ title: '', content: '' });
@@ -26,6 +27,7 @@ const Notes: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const normalizeTitle = (value?: string) => (value || '').trim();
@@ -189,7 +191,12 @@ const Notes: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="auth-container">Opening Workspace...</div>;
+  const handleSignOut = () => {
+    localStorage.removeItem('userEmail');
+    navigate('/login');
+  };
+
+  if (loading) return <div className="dashboard-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Opening Workspace...</div>;
 
   return (
     <div className="dashboard-container">
@@ -203,122 +210,143 @@ const Notes: React.FC = () => {
       {showWarning && (
         <div className="modal-overlay">
           <div className="modal-card">
-            <div className="modal-icon">!</div>
+            <div className="modal-icon-wrapper">⚠️</div>
             <h3>Unsaved Changes</h3>
-            <p>You have made changes that haven't been saved. If you leave now, these changes will be lost.</p>
+            <p>Your latest edits haven't been saved yet. Are you sure you want to discard them?</p>
             <div className="modal-actions">
-              <button className="modal-btn btn-cancel" onClick={() => setShowWarning(false)}>Go Back</button>
-              <button className="modal-btn btn-discard" onClick={confirmDiscard}>Discard Changes</button>
+              <button className="btn-secondary" onClick={() => setShowWarning(false)}>Go Back</button>
+              <button className="btn-danger" onClick={confirmDiscard}>Discard</button>
             </div>
           </div>
         </div>
       )}
 
       {/* Sidebar */}
-      <div className="dashboard-sidebar notes-sidebar" style={{ width: '380px' }}>
-        <div className="sidebar-header notes-sidebar-header">
-          <div className="notes-sidebar-title-row">
-            <div>
-              <h3 className="notes-sidebar-title">Notes</h3>
-              <p className="notes-sidebar-subtitle">Search and reopen your latest work.</p>
-            </div>
-            <button onClick={handleNewNote} className="new-note-btn">New Note</button>
+      <aside className="dashboard-sidebar">
+        <div className="sidebar-header">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+          <h3>Stride.</h3>
+        </div>
+        
+        <nav className="sidebar-nav">
+          <Link to="/dashboard" className="sidebar-link">🏠 Overview</Link>
+          
+          {/* COLLAPSIBLE FEATURES */}
+          <div className="sidebar-item-group">
+            <button 
+              onClick={() => setIsFeaturesOpen(!isFeaturesOpen)}
+              className="sidebar-link"
+              style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}
+            >
+              <span>🚀 Show more</span>
+              <span style={{ transform: isFeaturesOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>▼</span>
+            </button>
+            {isFeaturesOpen && (
+              <div style={{ paddingLeft: '1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
+                <Link to="/calendar" className="sidebar-link" style={{ fontSize: '0.9rem' }}>📅 Calendar</Link>
+                <Link to="/todo" className="sidebar-link" style={{ fontSize: '0.9rem' }}>✅ Tasks</Link>
+                <Link to="/goals" className="sidebar-link" style={{ fontSize: '0.9rem' }}>🎯 Goals</Link>
+              </div>
+            )}
           </div>
-          <div className="notes-search-shell">
-            <span className="notes-search-icon" aria-hidden="true">⌕</span>
-            <input
-              className="notes-search-input"
-              type="text" 
-              placeholder="Search notes..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+
+          <div className="sidebar-divider" style={{ height: '1px', background: 'var(--border)', margin: '0.5rem 0' }}></div>
+          
+          {/* SEARCH BAR */}
+          <div className="notes-search-container">
+            <div className="notes-search-input-wrapper">
+              <svg className="notes-search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+              <input 
+                type="text" 
+                placeholder="Search notes..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <button onClick={handleNewNote} className="btn-primary" style={{ margin: '0 0.75rem 1.5rem 0.75rem' }}>+ New Note</button>
+          
+          <div style={{ padding: '0 0.75rem 0.5rem 1rem', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text)', opacity: 0.6, letterSpacing: '0.05em' }}>Recent Notes</div>
+          <div className="notes-list-sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
+            {notes
+              .filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase()))
+              .map((note) => (
+              <div 
+                key={note.id} 
+                className={`sidebar-link ${currentNote.id === note.id ? 'active' : ''}`}
+                onClick={() => handleSelectNote(note)}
+                style={{ cursor: 'pointer', justifyContent: 'space-between', margin: '0 0.5rem' }}
+              >
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{note.title || 'Untitled Note'}</span>
+                {currentNote.id === note.id && <span onClick={(e) => handleDeleteNote(note.id, e)} style={{ fontSize: '0.8rem', opacity: 0.7 }}>✕</span>}
+              </div>
+            ))}
+          </div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <div style={{ padding: '0.5rem' }}>
+            <div style={{ fontWeight: '700', color: 'var(--text-h)', fontSize: '0.95rem' }}>{user?.full_name}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text)' }}>{user?.email}</div>
+          </div>
+          <button onClick={handleSignOut} className="btn-sign-out">Logout</button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="dashboard-main" style={{ padding: '0' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <header style={{ padding: '1.25rem 3.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '2rem', background: 'white' }}>
+             <input
+              ref={titleInputRef}
+              type="text"
+              className="note-title-input-enhanced"
+              placeholder="Give your note a title..."
+              value={currentNote.title || ''}
+              onChange={(e) => setCurrentNote(prev => ({ ...prev, title: e.target.value }))}
+            />
+            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+               {hasUnsavedChanges() && (
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: '700' }}>
+                   <span style={{ width: '8px', height: '8px', background: 'currentColor', borderRadius: '50%', display: 'inline-block' }}></span>
+                   Unsaved
+                 </div>
+               )}
+               <button onClick={handleSaveNote} className="btn-save-enhanced" disabled={saving}>
+                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                 </svg>
+                 {saving ? 'Saving...' : 'Save Note'}
+               </button>
+            </div>
+          </header>
+
+          <div style={{ flex: 1, padding: '2rem 3.5rem', overflowY: 'auto', background: 'white' }}>
+            <ReactQuill 
+              key={currentNote.id || 'new'}
+              theme="snow" 
+              value={currentNote.content || ''} 
+              onChange={(content) => setCurrentNote(prev => ({ ...prev, content }))}
+              placeholder="Start writing your brilliant ideas here..."
+              modules={{
+                toolbar: [
+                  [{ 'header': [1, 2, 3, false] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{'list': 'ordered'}, {'list': 'bullet'}],
+                  ['link', 'image'],
+                  ['clean']
+                ],
+              }}
+              style={{ height: 'calc(100% - 60px)' }}
             />
           </div>
         </div>
-        
-        <div className="notes-list" style={{ padding: '1rem' }}>
-          {notes.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && 
-            <div style={{ padding: '20px', color: '#888', textAlign: 'center' }}>
-              {searchQuery ? 'No notes found' : 'No notes yet'}
-            </div>
-          }
-          {notes
-            .filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase()))
-            .map((note) => (
-            <div 
-              key={note.id} 
-              className={`note-item ${currentNote.id === note.id ? 'active' : ''}`}
-              onClick={() => handleSelectNote(note)}
-              style={{ padding: '1.5rem' }}
-            >
-              <div className="note-item-title" style={{ fontSize: '1.1rem', marginBottom: '0.6rem' }}>{note.title || 'Untitled Note'}</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="note-item-date">{new Date(note.updated_at).toLocaleDateString()}</span>
-                <span 
-                  onClick={(e) => handleDeleteNote(note.id, e)} 
-                  className="delete-note-link"
-                >
-                  Delete
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="sidebar-footer" style={{ padding: '2rem' }}>
-          <div style={{ fontWeight: '600', color: '#374151', fontSize: '1rem' }}>{user?.full_name}</div>
-          <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>{user?.email}</div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="dashboard-main notes-main" style={{ padding: '0 4rem' }}>
-        <div className="editor-header notes-editor-header">
-          <button
-            onClick={() => handleActionWithWarning(() => navigate('/dashboard'))}
-            className="dashboard-back-btn"
-          >
-            Back to Dashboard
-          </button>
-          <input
-            ref={titleInputRef}
-            type="text"
-            className="note-title-input notes-title-input"
-            placeholder="Name your note..."
-            value={currentNote.title || ''}
-            onChange={(e) => setCurrentNote(prev => ({ ...prev, title: e.target.value }))}
-          />
-          <div className="notes-editor-actions">
-            <button
-              onClick={handleSaveNote}
-              className="save-note-btn"
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save Note'}
-            </button>
-          </div>
-        </div>
-
-        <div className="editor-container notes-editor-container">
-          <ReactQuill 
-            key={currentNote.id || 'new'}
-            theme="snow" 
-            value={currentNote.content || ''} 
-            onChange={(content) => setCurrentNote(prev => ({ ...prev, content }))}
-            placeholder="Start typing or paste images here..."
-            style={{ fontSize: '1.2rem' }}
-            modules={{
-              toolbar: [
-                [{ 'header': [1, 2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{'list': 'ordered'}, {'list': 'bullet'}],
-                ['link', 'image'],
-                ['clean']
-              ],
-            }}
-          />
-        </div>
-      </div>
+      </main>
     </div>
   );
 };

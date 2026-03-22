@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import '../App.css';
 
@@ -17,6 +17,7 @@ interface Task {
 
 const Tasks: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -152,126 +153,155 @@ const Tasks: React.FC = () => {
     });
   };
 
-  const handleCancelEdit = () => {
-    setEditingTaskId(null);
-    setForm({ title: '', details: '', due_date: '', priority: 'Medium' });
+  const handleSignOut = () => {
+    localStorage.removeItem('userEmail');
+    navigate('/login');
   };
 
-  if (loading) return <div className="auth-container">Loading tasks...</div>;
+  if (loading) return <div className="dashboard-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Loading Workspace...</div>;
 
   return (
-    <div className="dashboard-container" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="dashboard-main feature-main">
-        <div className="editor-header feature-header">
-          <div className="feature-header-copy">
-            <button onClick={() => navigate('/dashboard')} className="dashboard-back-btn">
-              Back to Dashboard
-            </button>
-            <div>
-              <h1 className="profile-title">Task Manager</h1>
-              <p className="feature-subtitle">Capture work, track momentum, and keep priorities visible.</p>
-            </div>
-          </div>
+    <div className="dashboard-container">
+       <aside className="dashboard-sidebar">
+        <div className="sidebar-header">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+          <h3>Stride.</h3>
         </div>
+        
+        <nav className="sidebar-nav">
+          <Link to="/dashboard" className="sidebar-link">🏠 Overview</Link>
+          <Link to="/notes" className={`sidebar-link ${location.pathname === '/notes' ? 'active' : ''}`}>📝 Notes</Link>
+          <Link to="/calendar" className={`sidebar-link ${location.pathname === '/calendar' ? 'active' : ''}`}>📅 Calendar</Link>
+          <Link to="/todo" className={`sidebar-link ${location.pathname === '/todo' ? 'active' : ''}`}>✅ Tasks</Link>
+          <Link to="/goals" className={`sidebar-link ${location.pathname === '/goals' ? 'active' : ''}`}>🎯 Goals</Link>
+        </nav>
+
+        <div className="sidebar-footer">
+          <div style={{ padding: '0.5rem' }}>
+            <div style={{ fontWeight: '700', color: 'var(--text-h)', fontSize: '0.95rem' }}>{user?.full_name}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text)' }}>{user?.email}</div>
+          </div>
+          <button onClick={handleSignOut} className="btn-sign-out">Logout</button>
+        </div>
+      </aside>
+
+      <main className="dashboard-main">
+        <header className="page-header">
+          <h1 className="page-title">Tasks</h1>
+          <p className="page-subtitle">Manage your to-dos and track your momentum.</p>
+        </header>
 
         <div className="feature-stats">
           <div className="feature-stat-card"><span>Total</span><strong>{stats.total}</strong></div>
           <div className="feature-stat-card"><span>To Do</span><strong>{stats.todo}</strong></div>
-          <div className="feature-stat-card"><span>In Progress</span><strong>{stats.doing}</strong></div>
+          <div className="feature-stat-card"><span>Active</span><strong>{stats.doing}</strong></div>
           <div className="feature-stat-card"><span>Done</span><strong>{stats.done}</strong></div>
         </div>
 
-        <div className="feature-grid tasks-layout">
+        <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '2rem', alignItems: 'start' }}>
           <section className="feature-panel">
-            <form onSubmit={handleCreateTask} className="feature-form">
-              <div className="feature-panel-heading">
-                <h3>{editingTaskId ? 'Edit Task' : 'Create Task'}</h3>
-              </div>
+            <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-h)' }}>{editingTaskId ? 'Edit Task' : 'New Task'}</h3>
+            <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <input
                 className="feature-input"
-                placeholder="Task title"
+                placeholder="What needs to be done?"
                 value={form.title}
                 onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                required
               />
               <textarea
                 className="feature-textarea"
-                placeholder="Description"
+                placeholder="Details (optional)"
+                rows={3}
                 value={form.details}
                 onChange={(e) => setForm((prev) => ({ ...prev, details: e.target.value }))}
               />
-              <div className="feature-row">
-                <input
-                  className="feature-input"
-                  type="date"
-                  value={form.due_date}
-                  onChange={(e) => setForm((prev) => ({ ...prev, due_date: e.target.value }))}
-                />
-                <select
-                  className="feature-input"
-                  value={form.priority}
-                  onChange={(e) => setForm((prev) => ({ ...prev, priority: e.target.value }))}
-                >
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Due Date</label>
+                  <input
+                    type="date"
+                    className="feature-input"
+                    value={form.due_date}
+                    onChange={(e) => setForm((prev) => ({ ...prev, due_date: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Priority</label>
+                  <select
+                    className="feature-input"
+                    value={form.priority}
+                    onChange={(e) => setForm((prev) => ({ ...prev, priority: e.target.value }))}
+                  >
+                    <option>Low</option>
+                    <option>Medium</option>
+                    <option>High</option>
+                  </select>
+                </div>
               </div>
-              <div className="feature-action-row">
-                {editingTaskId && (
-                  <button type="button" className="secondary-action-btn" onClick={handleCancelEdit}>
-                    Cancel
-                  </button>
-                )}
-                <button type="submit" className="save-note-btn" disabled={saving}>
-                  {saving ? 'Saving...' : editingTaskId ? 'Update Task' : 'Add Task'}
+              <button type="submit" className="btn-primary" disabled={saving}>
+                {saving ? 'Saving...' : editingTaskId ? 'Update Task' : 'Create Task'}
+              </button>
+              {editingTaskId && (
+                <button type="button" onClick={() => setEditingTaskId(null)} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', fontSize: '0.9rem' }}>
+                  Cancel Edition
                 </button>
-              </div>
+              )}
             </form>
           </section>
 
-          <section className="feature-panel feature-panel-stack">
-            <div className="task-filter-row">
-              {['all', 'todo', 'doing', 'done'].map((status) => (
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--accent-bg)', padding: '0.4rem', borderRadius: '14px', width: 'fit-content' }}>
+              {['all', 'todo', 'doing', 'done'].map((s) => (
                 <button
-                  key={status}
-                  className={`task-filter-btn ${filter === status ? 'active' : ''}`}
-                  onClick={() => setFilter(status)}
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  style={{
+                    padding: '0.5rem 1rem', border: 'none', borderRadius: '10px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer',
+                    background: filter === s ? 'white' : 'transparent',
+                    color: filter === s ? 'var(--accent)' : 'var(--text)',
+                    boxShadow: filter === s ? 'var(--shadow-sm)' : 'none'
+                  }}
                 >
-                  {status === 'all' ? 'All' : status === 'todo' ? 'To Do' : status === 'doing' ? 'In Progress' : 'Done'}
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
               ))}
             </div>
 
-            <div className="feature-list">
-              {filteredTasks.length === 0 && <div className="empty-state">No tasks in this view yet.</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {filteredTasks.length === 0 && <div className="empty-state">No tasks found.</div>}
               {filteredTasks.map((task) => (
-                <div key={task.id} className="task-card">
-                  <div className="task-card-top">
+                <div key={task.id} className="feature-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <div className="feature-item-title">{task.title}</div>
-                      <div className="feature-item-meta">
-                        {[task.priority, task.due_date && `Due ${new Date(task.due_date).toLocaleDateString()}`].filter(Boolean).join(' • ')}
+                      <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-h)', fontSize: '1.1rem' }}>{task.title}</h4>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text)', display: 'flex', gap: '0.75rem' }}>
+                        <span style={{ color: task.priority === 'High' ? '#ef4444' : task.priority === 'Medium' ? '#f59e0b' : 'var(--text)' }}>
+                          ● {task.priority}
+                        </span>
+                        {task.due_date && <span>📅 {new Date(task.due_date).toLocaleDateString()}</span>}
                       </div>
                     </div>
-                    <div className="item-action-row">
-                      <button type="button" className="item-action-btn" onClick={() => handleEditTask(task)}>
-                        Edit
-                      </button>
-                      <button type="button" className="item-action-btn danger" onClick={() => handleDeleteTask(task.id)}>
-                        Delete
-                      </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleEditTask(task)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>✏️</button>
+                      <button onClick={() => handleDeleteTask(task.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>🗑️</button>
                     </div>
                   </div>
-                  {task.details && <p className="task-card-text">{task.details}</p>}
-                  <div className="task-status-row">
-                    {['todo', 'doing', 'done'].map((status) => (
+                  {task.details && <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5' }}>{task.details}</p>}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    {['todo', 'doing', 'done'].map((s) => (
                       <button
-                        key={status}
-                        className={`task-status-btn ${task.status === status ? 'active' : ''}`}
-                        type="button"
-                        onClick={() => handleStatusChange(task, status)}
+                        key={s}
+                        onClick={() => handleStatusChange(task, s)}
+                        style={{
+                          padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--border)',
+                          background: task.status === s ? 'var(--accent)' : 'white',
+                          color: task.status === s ? 'white' : 'var(--text)',
+                        }}
                       >
-                        {status === 'todo' ? 'To Do' : status === 'doing' ? 'In Progress' : 'Done'}
+                        {s === 'todo' ? 'To Do' : s === 'doing' ? 'Active' : 'Done'}
                       </button>
                     ))}
                   </div>
@@ -280,7 +310,7 @@ const Tasks: React.FC = () => {
             </div>
           </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

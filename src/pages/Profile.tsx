@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import '../App.css';
 
@@ -19,10 +19,10 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
 
   const availableFeatures = [
-    { id: 'Notes', name: 'Notes & Documents', icon: '📝', description: 'Rich text editing and organization' },
-    { id: 'Calendar', name: 'Smart Calendar', icon: '📅', description: 'Schedule and manage events' },
-    { id: 'Todo', name: 'Task Manager', icon: '✅', description: 'Track your daily to-do list' },
-    { id: 'Goals', name: 'Goal Tracking', icon: '🎯', description: 'Set and monitor long-term goals' }
+    { id: 'Notes', name: 'Notes', icon: '📝', description: 'Rich text editing and organization' },
+    { id: 'Calendar', name: 'Calendar', icon: '📅', description: 'Schedule and manage events' },
+    { id: 'Todo', name: 'Tasks', icon: '✅', description: 'Track your daily to-do list' },
+    { id: 'Goals', name: 'Goals', icon: '🎯', description: 'Set and monitor long-term goals' }
   ];
 
   const showToast = (type: 'error' | 'success', text: string) => {
@@ -126,10 +126,10 @@ const Profile: React.FC = () => {
     navigate('/login');
   };
 
-  if (loading) return <div className="auth-container">Loading Profile...</div>;
+  if (loading) return <div className="dashboard-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Loading Profile...</div>;
 
   return (
-    <div className="dashboard-container" style={{ backgroundColor: '#f9fafb' }}>
+    <div className="dashboard-container">
       {toast && (
         <div className="toast-stack">
           <div className={`toast-notification toast-${toast.type}`}>{toast.text}</div>
@@ -140,101 +140,124 @@ const Profile: React.FC = () => {
       {showWarning && (
         <div className="modal-overlay">
           <div className="modal-card">
-            <div className="modal-icon">!</div>
+            <div className="modal-icon-wrapper">⚠️</div>
             <h3>Unsaved Changes</h3>
-            <p>You have made changes that haven't been saved. If you leave now, these changes will be lost.</p>
+            <p>You have made changes that haven't been saved yet. Are you sure you want to discard them?</p>
             <div className="modal-actions">
-              <button className="modal-btn btn-cancel" onClick={() => setShowWarning(false)}>Go Back</button>
-              <button className="modal-btn btn-discard" onClick={confirmDiscard}>Discard Changes</button>
+              <button className="btn-secondary" onClick={() => setShowWarning(false)}>Go Back</button>
+              <button className="btn-danger" onClick={confirmDiscard}>Discard</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="dashboard-main profile-page-main">
-        <div className="profile-container-inner">
-          <div className="editor-header" style={{ justifyContent: 'space-between', padding: '3rem 0', borderBottom: 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <button
-                onClick={() => handleActionWithWarning(() => navigate('/dashboard'))}
-                className="dashboard-back-btn"
-              >
-                Back to Dashboard
-              </button>
-              <h1 className="profile-title">Profile Settings</h1>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <button onClick={() => handleActionWithWarning(handleSignOut)} className="btn-sign-out">
-                <span className="btn-sign-out-label">Logout</span>
-                <span className="btn-sign-out-arrow" aria-hidden="true">{'>'}</span>
-              </button>
-            </div>
+      <aside className="dashboard-sidebar">
+        <div className="sidebar-header">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+          <h3>Stride.</h3>
+        </div>
+        
+        <nav className="sidebar-nav">
+          <Link to="/dashboard" className="sidebar-link">🏠 Overview</Link>
+          <div className="sidebar-divider" style={{ height: '1px', background: 'var(--border)', margin: '0.5rem 0' }}></div>
+          {availableFeatures.filter(f => selectedFeatures.includes(f.id)).map(feature => (
+            <Link key={feature.id} to={feature.id === 'Todo' ? '/todo' : `/${feature.id.toLowerCase()}`} className="sidebar-link">
+              <span>{feature.icon}</span> {feature.name}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div style={{ padding: '0.5rem' }}>
+            <div style={{ fontWeight: '700', color: 'var(--text-h)', fontSize: '0.95rem' }}>{user?.full_name}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text)' }}>{user?.email}</div>
           </div>
+          <button onClick={() => handleActionWithWarning(handleSignOut)} className="btn-sign-out">Logout</button>
+        </div>
+      </aside>
 
-          <form onSubmit={handleSaveProfile} className="profile-form">
-            <div className="profile-card">
-              <div className="profile-section-header">
-                <span className="profile-section-icon">👤</span>
-                <h3>Personal Information</h3>
+      <main className="dashboard-main">
+        <header className="page-header">
+          <button
+            onClick={() => handleActionWithWarning(() => navigate('/dashboard'))}
+            style={{ width: 'fit-content', background: 'none', border: 'none', color: 'var(--accent)', fontWeight: '700', cursor: 'pointer', padding: '0', marginBottom: '0.5rem' }}
+          >
+            ← Back to Dashboard
+          </button>
+          <h1 className="page-title">Profile Settings</h1>
+          <p className="page-subtitle">Manage your personal information and workspace preferences.</p>
+        </header>
+
+        <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <section className="feature-panel">
+            <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-h)' }}>Personal Information</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div className="form-group">
+                <label>Full Name</label>
+                <input 
+                  className="feature-input"
+                  type="text" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                />
               </div>
-              <div className="profile-input-grid">
-                <div className="profile-input-group">
-                  <label>Full Name</label>
-                  <input 
-                    type="text" 
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div className="profile-input-group">
-                  <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                  />
-                </div>
+              <div className="form-group">
+                <label>Email Address</label>
+                <input 
+                  className="feature-input"
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                />
               </div>
             </div>
+          </section>
 
-            <div className="profile-card">
-              <div className="profile-section-header">
-                <span className="profile-section-icon">🚀</span>
-                <h3>Workspace Features</h3>
-              </div>
-              <p className="section-desc">Customize your workspace by enabling or disabling specific tools.</p>
-              <div className="features-grid">
-                {availableFeatures.map(feature => (
-                  <div 
-                    key={feature.id} 
-                    className={`feature-card ${selectedFeatures.includes(feature.id) ? 'selected' : ''}`}
-                    onClick={() => handleToggleFeature(feature.id)}
-                  >
-                    <div className="feature-checkbox">
-                      {selectedFeatures.includes(feature.id) && '✓'}
-                    </div>
-                    <div className="feature-info">
-                      <div className="feature-name" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>{feature.icon}</span>
-                        {feature.name}
-                      </div>
-                      <div className="feature-desc">{feature.description}</div>
+          <section className="feature-panel">
+            <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-h)' }}>Workspace Features</h3>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.95rem' }}>Enable or disable specific tools to customize your experience.</p>
+            
+            <div className="feature-grid">
+              {availableFeatures.map(feature => (
+                <div 
+                  key={feature.id} 
+                  className={`feature-item-card ${selectedFeatures.includes(feature.id) ? 'active-feature' : ''}`}
+                  onClick={() => handleToggleFeature(feature.id)}
+                  style={{ 
+                    border: selectedFeatures.includes(feature.id) ? '2px solid var(--accent)' : '1px solid var(--border)',
+                    background: selectedFeatures.includes(feature.id) ? 'var(--accent-bg)' : 'white'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div className="feature-icon-wrapper">{feature.icon}</div>
+                    <div style={{ 
+                      width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: selectedFeatures.includes(feature.id) ? 'var(--accent)' : 'transparent',
+                      borderColor: selectedFeatures.includes(feature.id) ? 'var(--accent)' : 'var(--border)'
+                    }}>
+                      {selectedFeatures.includes(feature.id) && <span style={{ color: 'white', fontSize: '0.8rem' }}>✓</span>}
                     </div>
                   </div>
-                ))}
-              </div>
+                  <h3>{feature.name}</h3>
+                  <p>{feature.description}</p>
+                </div>
+              ))}
             </div>
+          </section>
 
-            <div className="profile-actions">
-              <button type="submit" className="save-profile-btn" disabled={saving}>
-                {saving ? 'Saving...' : 'Save All Changes'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+             {hasUnsavedChanges() && <span style={{ alignSelf: 'center', fontSize: '0.9rem', color: 'var(--accent)', fontWeight: '600' }}>You have unsaved changes</span>}
+             <button type="submit" className="btn-primary" style={{ padding: '1rem 2.5rem' }} disabled={saving}>
+               {saving ? 'Saving...' : 'Save All Changes'}
+             </button>
+          </div>
+        </form>
+      </main>
     </div>
   );
 };

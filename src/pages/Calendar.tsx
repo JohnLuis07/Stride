@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import '../App.css';
 
@@ -36,6 +36,7 @@ const formatTimeLabel = (value?: string | null) => {
 
 const Calendar: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const today = useMemo(() => new Date(), []);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -201,39 +202,61 @@ const Calendar: React.FC = () => {
     setForm({ title: '', details: '', start_time: '', end_time: '', category: 'Focus' });
   };
 
-  if (loading) return <div className="auth-container">Loading calendar...</div>;
+  const handleSignOut = () => {
+    localStorage.removeItem('userEmail');
+    navigate('/login');
+  };
+
+  if (loading) return <div className="dashboard-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Loading Workspace...</div>;
 
   return (
-    <div className="dashboard-container" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="dashboard-main feature-main">
-        <div className="editor-header feature-header">
-          <div className="feature-header-copy">
-            <button onClick={() => navigate('/dashboard')} className="dashboard-back-btn">
-              Back to Dashboard
-            </button>
-            <div>
-              <h1 className="profile-title">Smart Calendar</h1>
-              <p className="feature-subtitle">Plan focused work, deadlines, and personal events in one place.</p>
-            </div>
-          </div>
-          <div className="feature-header-chip">Selected: {new Date(selectedDate).toLocaleDateString()}</div>
+    <div className="dashboard-container">
+      <aside className="dashboard-sidebar">
+        <div className="sidebar-header">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+          <h3>Stride.</h3>
         </div>
+        
+        <nav className="sidebar-nav">
+          <Link to="/dashboard" className="sidebar-link">🏠 Overview</Link>
+          <Link to="/notes" className={`sidebar-link ${location.pathname === '/notes' ? 'active' : ''}`}>📝 Notes</Link>
+          <Link to="/calendar" className={`sidebar-link ${location.pathname === '/calendar' ? 'active' : ''}`}>📅 Calendar</Link>
+          <Link to="/todo" className={`sidebar-link ${location.pathname === '/todo' ? 'active' : ''}`}>✅ Tasks</Link>
+          <Link to="/goals" className={`sidebar-link ${location.pathname === '/goals' ? 'active' : ''}`}>🎯 Goals</Link>
+        </nav>
 
-        <div className="feature-grid calendar-layout">
-          <section className="feature-panel">
-            <div className="calendar-toolbar">
-              <button className="calendar-nav-btn" onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}>
-                Prev
+        <div className="sidebar-footer">
+          <div style={{ padding: '0.5rem' }}>
+            <div style={{ fontWeight: '700', color: 'var(--text-h)', fontSize: '0.95rem' }}>{user?.full_name}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text)' }}>{user?.email}</div>
+          </div>
+          <button onClick={handleSignOut} className="btn-sign-out">Logout</button>
+        </div>
+      </aside>
+
+      <main className="dashboard-main">
+        <header className="page-header">
+          <h1 className="page-title">Smart Calendar</h1>
+          <p className="page-subtitle">Plan focused work, deadlines, and personal events in one place.</p>
+        </header>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem', height: '100%', alignItems: 'start' }}>
+          <section className="feature-panel" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <button className="btn-secondary" style={{ padding: '0.5rem 1rem', fontWeight: '800', color: 'var(--text-h)' }} onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}>
+                ← Prev
               </button>
-              <h2 className="calendar-month-title">{monthLabel(viewMonth)}</h2>
-              <button className="calendar-nav-btn" onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1))}>
-                Next
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-h)' }}>{monthLabel(viewMonth)}</h2>
+              <button className="btn-secondary" style={{ padding: '0.5rem 1rem', fontWeight: '800', color: 'var(--text-h)' }} onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1))}>
+                Next →
               </button>
             </div>
 
-            <div className="calendar-grid">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
               {weekdayLabels.map((label) => (
-                <div key={label} className="calendar-weekday">{label}</div>
+                <div key={label} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-h)', textTransform: 'uppercase', paddingBottom: '0.5rem' }}>{label}</div>
               ))}
               {monthDays.map((date) => {
                 const dateKey = formatDateKey(date);
@@ -245,16 +268,21 @@ const Calendar: React.FC = () => {
                 return (
                   <button
                     key={dateKey}
-                    className={`calendar-day ${isCurrentMonth ? '' : 'is-muted'} ${isToday ? 'is-today' : ''} ${isSelected ? 'is-selected' : ''}`}
                     onClick={() => setSelectedDate(dateKey)}
+                    style={{
+                      aspectRatio: '1', display: 'flex', flexDirection: 'column', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '12px', cursor: 'pointer',
+                      background: isSelected ? 'var(--accent-bg)' : 'var(--sidebar-bg)',
+                      borderColor: isSelected ? 'var(--accent)' : isToday ? 'var(--accent-light)' : 'var(--border)',
+                      opacity: isCurrentMonth ? 1 : 0.6,
+                      transition: 'all 0.2s'
+                    }}
                   >
-                    <span className="calendar-day-number">{date.getDate()}</span>
-                    <div className="calendar-day-events">
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <span key={event.id} className="calendar-event-pill">
-                          {event.title}
-                        </span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: isToday ? 'var(--accent)' : 'var(--text-h)' }}>{date.getDate()}</span>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden', marginTop: '4px' }}>
+                      {dayEvents.slice(0, 2).map(e => (
+                        <div key={e.id} style={{ height: '4px', background: 'var(--accent)', borderRadius: '2px', opacity: 0.6 }}></div>
                       ))}
+                      {dayEvents.length > 2 && <div style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: '700' }}>+{dayEvents.length - 2}</div>}
                     </div>
                   </button>
                 );
@@ -262,108 +290,42 @@ const Calendar: React.FC = () => {
             </div>
           </section>
 
-          <section className="feature-panel feature-panel-stack">
-            <form onSubmit={handleSaveEvent} className="feature-form">
-              <div className="feature-panel-heading">
-                <h3>{editingEventId ? 'Edit Event' : 'Schedule Event'}</h3>
-                <span>{new Date(selectedDate).toLocaleDateString()}</span>
-              </div>
-
-              <input
-                className="feature-input"
-                placeholder="Event title"
-                value={form.title}
-                onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-              />
-              <textarea
-                className="feature-textarea"
-                placeholder="Details"
-                value={form.details}
-                onChange={(e) => setForm((prev) => ({ ...prev, details: e.target.value }))}
-              />
-              <div className="feature-row">
-                <input
-                  className="feature-input"
-                  type="time"
-                  value={form.start_time}
-                  onChange={(e) => setForm((prev) => ({ ...prev, start_time: e.target.value }))}
-                />
-                <input
-                  className="feature-input"
-                  type="time"
-                  value={form.end_time}
-                  onChange={(e) => setForm((prev) => ({ ...prev, end_time: e.target.value }))}
-                />
-              </div>
-              <select
-                className="feature-input"
-                value={form.category}
-                onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-              >
-                <option>Focus</option>
-                <option>Meeting</option>
-                <option>Personal</option>
-                <option>Deadline</option>
-              </select>
-              <div className="feature-action-row">
-                {editingEventId && (
-                  <button type="button" className="secondary-action-btn" onClick={handleCancelEdit}>
-                    Cancel
-                  </button>
-                )}
-                <button type="submit" className="save-note-btn" disabled={saving}>
-                  {saving ? 'Saving...' : editingEventId ? 'Update Event' : 'Add Event'}
-                </button>
-              </div>
-            </form>
-
-            <div className="feature-panel-section">
-              <div className="feature-panel-heading">
-                <h3>Agenda</h3>
-                <span>{selectedEvents.length} items</span>
-              </div>
-              <div className="feature-list">
-                {selectedEvents.length === 0 && <div className="empty-state">Nothing planned for this date.</div>}
-                {selectedEvents.map((event) => (
-                  <div key={event.id} className="feature-list-item">
-                    <div>
-                      <div className="feature-item-title">{event.title}</div>
-                      <div className="feature-item-meta">
-                        {[event.category, formatTimeLabel(event.start_time), event.end_time && `to ${formatTimeLabel(event.end_time)}`].filter(Boolean).join(' | ')}
-                      </div>
-                    </div>
-                    <div className="item-action-row">
-                      <button type="button" className="item-action-btn" onClick={() => handleEditEvent(event)}>
-                        Edit
-                      </button>
-                      <button type="button" className="item-action-btn danger" onClick={() => handleDeleteEvent(event.id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="feature-panel">
+              <h3 style={{ margin: '0 0 1.25rem 0', color: 'var(--text-h)' }}>{editingEventId ? 'Edit Event' : 'Schedule Event'}</h3>
+              <form onSubmit={handleSaveEvent} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <input className="feature-input" placeholder="Event title" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} required />
+                <textarea className="feature-textarea" placeholder="Details" rows={2} value={form.details} onChange={(e) => setForm((prev) => ({ ...prev, details: e.target.value }))} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group"><label>Start</label><input type="time" className="feature-input" value={form.start_time} onChange={(e) => setForm((prev) => ({ ...prev, start_time: e.target.value }))} /></div>
+                  <div className="form-group"><label>End</label><input type="time" className="feature-input" value={form.end_time} onChange={(e) => setForm((prev) => ({ ...prev, end_time: e.target.value }))} /></div>
+                </div>
+                <div className="form-group">
+                  <label>Category</label>
+                  <select className="feature-input" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}>
+                    <option>Focus</option><option>Meeting</option><option>Personal</option><option>Deadline</option>
+                  </select>
+                </div>
+                <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Saving...' : editingEventId ? 'Update' : 'Add to Calendar'}</button>
+                {editingEventId && <button type="button" onClick={handleCancelEdit} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', fontSize: '0.9rem' }}>Cancel</button>}
+              </form>
             </div>
 
-            <div className="feature-panel-section">
-              <div className="feature-panel-heading">
-                <h3>Upcoming</h3>
-                <span>Next 5</span>
-              </div>
-              <div className="feature-list">
-                {upcomingEvents.length === 0 && <div className="empty-state">Add events to build your schedule.</div>}
-                {upcomingEvents.map((event) => (
-                  <div key={event.id} className="feature-list-item">
-                    <div>
-                      <div className="feature-item-title">{event.title}</div>
-                      <div className="feature-item-meta">
-                        {new Date(event.event_date).toLocaleDateString()} {event.start_time ? `| ${formatTimeLabel(event.start_time)}` : ''}
+            <div className="feature-panel" style={{ padding: '1.5rem' }}>
+              <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: 'var(--text-h)' }}>Agenda for {new Date(selectedDate).toLocaleDateString()}</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {selectedEvents.length === 0 && <div className="empty-state" style={{ padding: '1rem' }}>Free day!</div>}
+                {selectedEvents.map(event => (
+                  <div key={event.id} style={{ padding: '1rem', background: 'var(--bg)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: '700', color: 'var(--text-h)' }}>{event.title}</span>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => handleEditEvent(event)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>✏️</button>
+                        <button onClick={() => handleDeleteEvent(event.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>🗑️</button>
                       </div>
                     </div>
-                    <div className="item-action-row">
-                      <button type="button" className="item-action-btn" onClick={() => handleEditEvent(event)}>
-                        Edit
-                      </button>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: '600', marginTop: '0.25rem' }}>
+                      {formatTimeLabel(event.start_time)} {event.end_time && ` - ${formatTimeLabel(event.end_time)}`}
                     </div>
                   </div>
                 ))}
@@ -371,7 +333,7 @@ const Calendar: React.FC = () => {
             </div>
           </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
