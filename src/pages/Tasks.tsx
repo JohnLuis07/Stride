@@ -200,7 +200,7 @@ const Tasks: React.FC = () => {
           <div className="feature-stat-card"><span>Done</span><strong>{stats.done}</strong></div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '2rem', alignItems: 'start' }}>
+        <div className="feature-layout-grid">
           <section className="feature-panel">
             <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-h)' }}>{editingTaskId ? 'Edit Task' : 'New Task'}</h3>
             <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -242,11 +242,18 @@ const Tasks: React.FC = () => {
                 </div>
               </div>
               <button type="submit" className="btn-primary" disabled={saving}>
-                {saving ? 'Saving...' : editingTaskId ? 'Update Task' : 'Create Task'}
+                {saving ? 'Saving...' : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14m-7-7v14"/>
+                    </svg>
+                    {editingTaskId ? 'Update Task' : 'Create Task'}
+                  </>
+                )}
               </button>
               {editingTaskId && (
-                <button type="button" onClick={() => setEditingTaskId(null)} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', fontSize: '0.9rem' }}>
-                  Cancel Edition
+                <button type="button" onClick={() => setEditingTaskId(null)} className="btn-ghost">
+                  Cancel
                 </button>
               )}
             </form>

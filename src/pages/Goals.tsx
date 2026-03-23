@@ -201,22 +201,41 @@ const Goals: React.FC = () => {
           <div className="feature-stat-card"><span>Avg. Momentum</span><strong>{goalSummary.average}%</strong></div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '2rem', alignItems: 'start' }}>
+        <div className="feature-layout-grid">
           <section className="feature-panel">
             <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-h)' }}>{editingGoalId ? 'Edit Goal' : 'Set New Goal'}</h3>
             <form onSubmit={handleCreateGoal} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <input className="feature-input" placeholder="What is your goal?" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} required />
               <textarea className="feature-textarea" placeholder="Why this matters..." rows={3} value={form.notes} onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group"><label>Target Value</label><input type="number" className="feature-input" value={form.target_value} onChange={(e) => setForm((prev) => ({ ...prev, target_value: e.target.value }))} /></div>
-                <div className="form-group"><label>Unit (e.g. %, days)</label><input type="text" className="feature-input" value={form.unit} onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))} /></div>
+                <div className="form-group">
+                  <label>Target Value</label>
+                  <input type="number" className="feature-input" value={form.target_value} onChange={(e) => setForm((prev) => ({ ...prev, target_value: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label>Unit (e.g. %, days)</label>
+                  <input type="text" className="feature-input" value={form.unit} onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))} />
+                </div>
               </div>
               <div className="form-group">
                 <label>Target Date</label>
                 <input type="date" className="feature-input" value={form.target_date} onChange={(e) => setForm((prev) => ({ ...prev, target_date: e.target.value }))} />
               </div>
-              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Saving...' : editingGoalId ? 'Update Goal' : 'Start Goal'}</button>
-              {editingGoalId && <button type="button" onClick={handleCancelEdit} style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', fontSize: '0.9rem' }}>Cancel</button>}
+              <button type="submit" className="btn-primary" disabled={saving}>
+                {saving ? 'Saving...' : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2v20M2 12h20"/>
+                    </svg>
+                    {editingGoalId ? 'Update Goal' : 'Start Goal'}
+                  </>
+                )}
+              </button>
+              {editingGoalId && (
+                <button type="button" onClick={handleCancelEdit} className="btn-ghost">
+                  Cancel
+                </button>
+              )}
             </form>
           </section>
 

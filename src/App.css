@@ -332,7 +332,14 @@ body { margin: 0; }
 .auth-header p { color: var(--text); font-size: 1.1rem; }
 .auth-form { display: flex; flex-direction: column; gap: 1.5rem; }
 
-.form-group { display: flex; flex-direction: column; gap: 0.6rem; text-align: left; }
+.form-group { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.5rem; 
+  text-align: left; 
+  width: 100%;
+  min-width: 0;
+}
 .form-group label { font-size: 0.95rem; font-weight: 700; color: var(--text-h); }
 .input-wrapper input {
   width: 100%; padding: 0.875rem 1.125rem; border: 2px solid var(--border); border-radius: 14px;
@@ -509,6 +516,93 @@ body { margin: 0; }
   cursor: not-allowed;
 }
 
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  padding: 0.875rem 1.5rem;
+  border-radius: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.25);
+  font-size: 1rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #7c3aed;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.btn-ghost:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.feature-layout-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .feature-layout-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-main {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  
+  .dashboard-sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .dashboard-main {
+    padding: 1.5rem;
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+}
+
 .note-title-input-enhanced {
   flex: 1;
   font-size: 1.75rem;
@@ -621,11 +715,89 @@ body { margin: 0; }
   padding: 1.5rem; background: var(--accent-bg); border-radius: 20px; display: flex; flex-direction: column; gap: 0.25rem;
 }
 .feature-stat-card span { font-size: 0.875rem; font-weight: 600; color: var(--accent); }
-.feature-stat-card strong { font-size: 1.75rem; font-weight: 800; color: var(--text-h); }
+.form-group label { 
+  font-size: 0.95rem; 
+  font-weight: 700; 
+  color: var(--text-h);
+  min-height: 3.2rem; /* Substantially increased to handle 2 lines comfortably */
+  display: flex;
+  align-items: flex-end; /* Keeps text anchored to the bottom near the input */
+  padding-bottom: 0.4rem;
+  line-height: 1.25;
+}
 
 .feature-input, .feature-textarea {
-  width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: 12px;
-  background: var(--bg); font-size: 1rem; outline: none; box-sizing: border-box;
+  width: 100%;
+  padding: 0 0.875rem; /* Set horizontal padding only */
+  height: 2.75rem; /* Fixed height for all inputs to align perfectly */
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 0.95rem; /* Slightly smaller font to fit text better */
+  outline: none;
+  box-sizing: border-box;
+  color: var(--text);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.feature-textarea {
+  height: auto; /* Textarea still needs auto height */
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.feature-input:focus, 
+.feature-textarea:focus,
+.feature-input:not(:placeholder-shown) {
+  border-color: var(--accent);
+  background: var(--bg);
+  color: var(--text-h);
+  box-shadow: 0 0 0 4px var(--accent-bg);
+}
+
+/* Date and Select specific overrides for vertical alignment */
+input[type="date"].feature-input,
+select.feature-input {
+  line-height: 2.75rem;
+}
+
+/* Date Input Specifics to prevent text/icon cutoff */
+input[type="date"].feature-input {
+  padding-left: 0.4rem;
+  padding-right: 0.4rem; /* Reset padding to standard */
+  font-family: inherit;
+  font-size: 0.85rem; /* Smaller font to ensure text + icon fit in narrow grid */
+}
+
+/* Ensure native calendar icon is pure black and moved significantly left */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0); /* Pure black */
+  margin-right: 1.5rem; /* Drastically increased to pull it deep into the input */
+  padding: 0;
+  opacity: 1;
+  width: 1.25rem;
+  height: 1.25rem;
+  position: relative;
+  z-index: 10;
+}
+
+input[type="date"]:focus::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* Fix for Select dropdown - Pure black arrow icon */
+select.feature-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23000000'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center; /* Balanced position */
+  background-size: 0.95rem;
+  padding-right: 2rem; /* Enough space for text and icon */
+  cursor: pointer;
 }
 
 .empty-state { padding: 3rem; text-align: center; border: 2px dashed var(--border); border-radius: 24px; color: var(--text); }
