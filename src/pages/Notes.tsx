@@ -6,7 +6,7 @@ import 'react-quill-new/dist/quill.snow.css';
 import '../App.css';
 
 // Register custom numeric font sizes
-const Size = Quill.import('attributors/style/size');
+const Size = Quill.import('attributors/style/size') as any;
 Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px', '64px'];
 Quill.register(Size, true);
 
