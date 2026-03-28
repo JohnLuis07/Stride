@@ -801,3 +801,40 @@ select.feature-input {
 }
 
 .empty-state { padding: 3rem; text-align: center; border: 2px dashed var(--border); border-radius: 24px; color: var(--text); }
+
+/* Ensure Notes Editor text is black and picker aligns */
+.ql-editor {
+  color: #000000 !important;
+  font-size: 1.1rem;
+}
+
+.ql-snow .ql-picker.ql-color-picker,
+.ql-snow .ql-picker.ql-background-picker {
+  height: 24px !important;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.ql-snow .ql-picker.ql-color-picker .ql-picker-label {
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Custom Font Size Picker Labels */
+.ql-snow .ql-picker.ql-size .ql-picker-label::before,
+.ql-snow .ql-picker.ql-size .ql-picker-item::before {
+  content: attr(data-value) !important;
+}
+
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label:not([data-value])::before,
+.ql-snow .ql-picker.ql-size .ql-picker-item:not([data-value])::before {
+  content: '16px' !important;
+}
+
+.ql-snow .ql-picker.ql-size {
+  width: 70px !important;
+}

@@ -49,7 +49,8 @@ const Dashboard: React.FC = () => {
     { id: 'Calendar', name: 'Calendar', icon: '📅', path: '/calendar', description: 'Schedule and manage your time.' },
     { id: 'Todo', name: 'Tasks', icon: '✅', path: '/todo', description: 'Keep track of your to-dos.' },
     { id: 'Goals', name: 'Goals', icon: '🎯', path: '/goals', description: 'Set and achieve your milestones.' },
-  ].filter(f => enabledFeatures.includes(f.id));
+    { id: 'Focus', name: 'Focus', icon: '⏱️', path: '/focus', description: 'Master productivity with Pomodoro.' },
+  ].filter(f => enabledFeatures.includes(f.id) || f.id === 'Focus');
 
   if (loading) return <div className="dashboard-container" style={{ justifyContent: 'center', alignItems: 'center' }}>Loading Workspace...</div>;
 

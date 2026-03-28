@@ -22,7 +22,8 @@ const Profile: React.FC = () => {
     { id: 'Notes', name: 'Notes', icon: '📝', description: 'Rich text editing and organization' },
     { id: 'Calendar', name: 'Calendar', icon: '📅', description: 'Schedule and manage events' },
     { id: 'Todo', name: 'Tasks', icon: '✅', description: 'Track your daily to-do list' },
-    { id: 'Goals', name: 'Goals', icon: '🎯', description: 'Set and monitor long-term goals' }
+    { id: 'Goals', name: 'Goals', icon: '🎯', description: 'Set and monitor long-term goals' },
+    { id: 'Focus', name: 'Focus', icon: '⏱️', description: 'Master productivity with Pomodoro' }
   ];
 
   const showToast = (type: 'error' | 'success', text: string) => {
@@ -229,7 +230,7 @@ const Profile: React.FC = () => {
                   onClick={() => handleToggleFeature(feature.id)}
                   style={{ 
                     border: selectedFeatures.includes(feature.id) ? '2px solid var(--accent)' : '1px solid var(--border)',
-                    background: selectedFeatures.includes(feature.id) ? 'var(--accent-bg)' : 'white'
+                    background: selectedFeatures.includes(feature.id) ? 'var(--accent-bg)' : 'var(--bg)'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

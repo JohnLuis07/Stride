@@ -1,9 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import ReactQuill from 'react-quill-new';
+import ReactQuill, { Quill } from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import '../App.css';
+
+// Register custom numeric font sizes
+const Size = Quill.import('attributors/style/size');
+Size.whitelist = ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px', '64px'];
+Quill.register(Size, true);
 
 interface Note {
   id: string;
@@ -247,6 +252,7 @@ const Notes: React.FC = () => {
                 <Link to="/calendar" className="sidebar-link" style={{ fontSize: '0.9rem' }}>📅 Calendar</Link>
                 <Link to="/todo" className="sidebar-link" style={{ fontSize: '0.9rem' }}>✅ Tasks</Link>
                 <Link to="/goals" className="sidebar-link" style={{ fontSize: '0.9rem' }}>🎯 Goals</Link>
+                <Link to="/focus" className="sidebar-link" style={{ fontSize: '0.9rem' }}>⏱️ Focus</Link>
               </div>
             )}
           </div>
@@ -334,13 +340,21 @@ const Notes: React.FC = () => {
               placeholder="Start writing your brilliant ideas here..."
               modules={{
                 toolbar: [
-                  [{ 'header': [1, 2, 3, false] }],
+                  [{ 'header': [1, 2, 3, false] }, { 'size': Size.whitelist }],
                   ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'color': [] }, { 'background': [] }],
                   [{'list': 'ordered'}, {'list': 'bullet'}],
                   ['link', 'image'],
                   ['clean']
                 ],
               }}
+              formats={[
+                'header', 'size',
+                'bold', 'italic', 'underline', 'strike',
+                'color', 'background',
+                'list', 'bullet',
+                'link', 'image'
+              ]}
               style={{ height: 'calc(100% - 60px)' }}
             />
           </div>

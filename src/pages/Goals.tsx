@@ -178,6 +178,7 @@ const Goals: React.FC = () => {
           <Link to="/calendar" className={`sidebar-link ${location.pathname === '/calendar' ? 'active' : ''}`}>📅 Calendar</Link>
           <Link to="/todo" className={`sidebar-link ${location.pathname === '/todo' ? 'active' : ''}`}>✅ Tasks</Link>
           <Link to="/goals" className={`sidebar-link ${location.pathname === '/goals' ? 'active' : ''}`}>🎯 Goals</Link>
+          <Link to="/focus" className={`sidebar-link ${location.pathname === '/focus' ? 'active' : ''}`}>⏱️ Focus</Link>
         </nav>
 
         <div className="sidebar-footer">
