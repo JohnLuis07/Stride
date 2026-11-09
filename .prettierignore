@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-ssr/
+.git/
+.agents/
+.codex/
+.aws/
+package-lock.json
+*.tsbuildinfo

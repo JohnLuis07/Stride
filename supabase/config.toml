@@ -1,0 +1,4 @@
+# The handler verifies the bearer token via Supabase Auth and checks notebook
+# ownership. Disable only the gateway's legacy JWT verifier for ES256 sessions.
+[functions.notes-ai]
+verify_jwt = false

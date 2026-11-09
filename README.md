@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# Stride web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React, TypeScript and Vite web workspace, connected to the same Supabase backend as
+Stride Android.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Set the public Supabase URL and anon/publishable key using `.env.example`. Never
+add service-role or AI provider secrets to the browser environment.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The Android feature port includes verified authentication, deadline timing,
+budget tracking, notebook study tools and a video studio, alongside a responsive
+indigo UI refresh. Read [setup, parity and browser differences](docs/web-android-parity.md)
+before connecting this update to a live backend.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm run build
+npm run lint
+npm test
 ```
+
+## Code formatting
+
+Use the shared Prettier configuration for TypeScript, TSX, JavaScript, CSS, HTML,
+JSON and Markdown files. It uses two-space indentation and a 100-character
+preferred line width. Dependencies, generated builds and the package lockfile
+are excluded. SQL migrations and TOML keep their existing native formatting.
+
+```sh
+npm run format
+npm run format:check
+```
+
+Run the formatting check before submitting changes. Formatting does not replace
+`npm run lint`, `npm run build` or `npm test`.
