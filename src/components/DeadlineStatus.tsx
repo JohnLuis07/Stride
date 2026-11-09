@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { completionTiming } from '../completionTiming';
 export type DeadlineRecord = {
   deadline_at?: string;
   completed_at?: string;
@@ -8,9 +9,11 @@ export type DeadlineRecord = {
 export default function DeadlineStatus({
   record,
   complete,
+  showCompletionTiming = false,
 }: {
   record: DeadlineRecord;
   complete: boolean;
+  showCompletionTiming?: boolean;
 }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -20,16 +23,26 @@ export default function DeadlineStatus({
   const deadline = record.deadline_at ? Date.parse(record.deadline_at) : NaN;
   const completion = record.completed_at ? Date.parse(record.completed_at) : NaN;
   const snapshot = record.completed_deadline_at ? Date.parse(record.completed_deadline_at) : NaN;
-  const text = complete
-    ? Number.isFinite(completion) && Number.isFinite(snapshot)
-      ? completion <= snapshot
-        ? 'Completed on time'
-        : 'Completed late'
-      : 'Completed · timing unavailable'
-    : Number.isFinite(deadline) && now > deadline
-      ? 'Overdue'
-      : record.deadline_time
-        ? 'Due at ' + record.deadline_time.slice(0, 5)
-        : '';
+  const timing = showCompletionTiming
+    ? completionTiming(
+        complete ? record.completed_deadline_at : record.deadline_at,
+        complete ? completion : now,
+      )
+    : null;
+  const text = timing
+    ? complete
+      ? `Completed ${timing}`
+      : `If completed now: ${timing}`
+    : complete
+      ? Number.isFinite(completion) && Number.isFinite(snapshot)
+        ? completion <= snapshot
+          ? 'Completed on time'
+          : 'Completed late'
+        : 'Completed · timing unavailable'
+      : Number.isFinite(deadline) && now > deadline
+        ? 'Overdue'
+        : record.deadline_time
+          ? 'Due at ' + record.deadline_time.slice(0, 5)
+          : '';
   return text ? <span className="deadline-status">{text}</span> : null;
 }

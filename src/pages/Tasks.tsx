@@ -5,12 +5,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import DeadlineStatus from '../components/DeadlineStatus';
+import { completionTiming } from '../completionTiming';
 import Sidebar from '../components/Sidebar';
 import '../App.css';
 
 interface Task {
   deadline_time?: string;
   deadline_at?: string;
+  deadline_timezone?: string;
   completed_at?: string;
   completed_deadline_at?: string;
   reminder_sound?: boolean;
@@ -25,11 +27,25 @@ interface Task {
   updated_at: string;
 }
 
+function confirmTaskCompletion(task: Task) {
+  const timing = completionTiming(task.deadline_at, Date.now());
+  const preview = timing
+    ? `Completing now would be ${timing}.`
+    : task.due_date
+      ? 'Deadline timing is unavailable for this task.'
+      : 'This task has no deadline.';
+  return window.confirm(
+    `Mark "${task.title}" as Done?\n\n${preview}\n\nEditing will be locked until you select Revert.`,
+  );
+}
+
 const Tasks: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserProfile | null>(useSessionProfile());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [taskError, setTaskError] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState('all');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -102,8 +118,13 @@ const Tasks: React.FC = () => {
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !form.title.trim()) return;
+    if (!user || !form.title.trim() || saving || updatingTaskId) return;
 
+    if (editingTaskId && tasks.find((task) => task.id === editingTaskId)?.status === 'done') {
+      return;
+    }
+
+    setTaskError('');
     setSaving(true);
     const payload = {
       user_id: user.id,
@@ -126,9 +147,10 @@ const Tasks: React.FC = () => {
             status: tasks.find((task) => task.id === editingTaskId)?.status || 'todo',
           })
           .eq('id', editingTaskId)
+          .neq('status', 'done')
           .select()
       : await supabase.from('tasks').insert([payload]).select();
-    if (!error && data) {
+    if (!error && data?.length) {
       const nextTask = data[0];
       setTasks((prev) => [nextTask, ...prev.filter((task) => task.id !== nextTask.id)]);
       setForm({
@@ -140,24 +162,48 @@ const Tasks: React.FC = () => {
         priority: 'Medium',
       });
       setEditingTaskId(null);
+    } else {
+      setTaskError('Unable to save this task. Completed tasks must be reverted before editing.');
     }
     setSaving(false);
   };
 
   const handleStatusChange = async (task: Task, status: string) => {
+    if (saving || updatingTaskId || task.status === status) return;
+    if (task.status === 'done' && status !== 'todo') return;
+
+    if (status === 'done' && !confirmTaskCompletion(task)) return;
+
+    setTaskError('');
+    setUpdatingTaskId(task.id);
     const { data, error } = await supabase
       .from('tasks')
       .update({
-        deadline_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        deadline_timezone:
+          task.deadline_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         status,
         updated_at: new Date().toISOString(),
       })
       .eq('id', task.id)
       .select();
 
-    if (!error && data) {
+    if (!error && data?.length) {
       setTasks((prev) => prev.map((item) => (item.id === task.id ? data[0] : item)));
+      if (status === 'done' && editingTaskId === task.id) {
+        setEditingTaskId(null);
+        setForm({
+          deadline_time: '',
+          reminder_sound: true,
+          title: '',
+          details: '',
+          due_date: '',
+          priority: 'Medium',
+        });
+      }
+    } else {
+      setTaskError('Unable to update this task. Please try again.');
     }
+    setUpdatingTaskId(null);
   };
 
   const handleDeleteTask = async (id: string) => {
@@ -179,6 +225,7 @@ const Tasks: React.FC = () => {
   };
 
   const handleEditTask = (task: Task) => {
+    if (task.status === 'done' || saving || updatingTaskId) return;
     setEditingTaskId(task.id);
     setForm({
       deadline_time: task.deadline_time || '',
@@ -228,6 +275,8 @@ const Tasks: React.FC = () => {
                 <strong>{stats.done}</strong>
               </div>
             </div>
+
+            {taskError && <p role="alert">{taskError}</p>}
 
             <div className="feature-layout-grid">
               <section className="feature-panel">
@@ -292,7 +341,11 @@ const Tasks: React.FC = () => {
                     />{' '}
                     Play deadline reminder sound
                   </label>
-                  <button type="submit" className="btn-primary" disabled={saving}>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={saving || updatingTaskId !== null}
+                  >
                     {saving ? (
                       'Saving...'
                     ) : (
@@ -397,7 +450,11 @@ const Tasks: React.FC = () => {
                           >
                             {task.title}
                           </h4>
-                          <DeadlineStatus record={task} complete={task.status === 'done'} />
+                          <DeadlineStatus
+                            record={task}
+                            complete={task.status === 'done'}
+                            showCompletionTiming
+                          />
                           <div
                             style={{
                               fontSize: '0.85rem',
@@ -424,17 +481,21 @@ const Tasks: React.FC = () => {
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button
-                            onClick={() => handleEditTask(task)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '1.2rem',
-                            }}
-                          >
-                            ✏️
-                          </button>
+                          {task.status !== 'done' && (
+                            <button
+                              aria-label={`Edit ${task.title}`}
+                              disabled={saving || updatingTaskId !== null}
+                              onClick={() => handleEditTask(task)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '1.2rem',
+                              }}
+                            >
+                              ✏️
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDeleteTask(task.id)}
                             style={{
@@ -454,24 +515,37 @@ const Tasks: React.FC = () => {
                         </p>
                       )}
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                        {['todo', 'doing', 'done'].map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => handleStatusChange(task, s)}
-                            style={{
-                              padding: '0.4rem 0.8rem',
-                              borderRadius: '8px',
-                              fontSize: '0.8rem',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              border: '1px solid var(--border)',
-                              background: task.status === s ? 'var(--accent)' : 'var(--sidebar-bg)',
-                              color: task.status === s ? 'white' : 'var(--text)',
-                            }}
-                          >
-                            {s === 'todo' ? 'To Do' : s === 'doing' ? 'Active' : 'Done'}
-                          </button>
-                        ))}
+                        {(task.status === 'done' ? ['todo'] : ['todo', 'doing', 'done']).map(
+                          (s) => (
+                            <button
+                              key={s}
+                              onClick={() => handleStatusChange(task, s)}
+                              disabled={saving || updatingTaskId !== null || task.status === s}
+                              aria-label={
+                                task.status === 'done' ? `Revert ${task.title} to To Do` : undefined
+                              }
+                              style={{
+                                padding: '0.4rem 0.8rem',
+                                borderRadius: '8px',
+                                fontSize: '0.8rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                border: '1px solid var(--border)',
+                                background:
+                                  task.status === s ? 'var(--accent)' : 'var(--sidebar-bg)',
+                                color: task.status === s ? 'white' : 'var(--text)',
+                              }}
+                            >
+                              {task.status === 'done'
+                                ? 'Revert'
+                                : s === 'todo'
+                                  ? 'To Do'
+                                  : s === 'doing'
+                                    ? 'Active'
+                                    : 'Done'}
+                            </button>
+                          ),
+                        )}
                       </div>
                     </div>
                   ))}

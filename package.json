@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node tests/focus.test.mjs && node tests/notes-cors.test.mjs",
+    "test": "node tests/focus.test.mjs && node tests/notes-cors.test.mjs && node tests/completion-timing.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
